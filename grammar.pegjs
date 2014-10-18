@@ -988,6 +988,7 @@ ExpressionNoIn
 
 Statement
   = Block
+  / ConstantStatement
   / VariableStatement
   / EmptyStatement
   / ExpressionStatement
