@@ -1027,6 +1027,7 @@ VariableStatement
   = VarToken __ declarations:VariableDeclarationList EOS {
       return {
         type:         "VariableDeclaration",
+        kind: "var",
         declarations: declarations
       };
     }

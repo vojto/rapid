@@ -1,2 +1,2 @@
-let foo = 3
-foo = 4
+var foo = 3
+var bar = 10

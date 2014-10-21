@@ -2,6 +2,7 @@ fs = require('fs')
 
 PEG = require('pegjs');
 prettyjson = require('prettyjson')
+escodegen = require('escodegen')
 
 
 grammar = fs.readFileSync('./grammar.pegjs', 'utf8')
@@ -29,7 +30,7 @@ class BindingsContext
       throw "Already bound: #{name}"
 
 
-class Parser
+class Checker
   parse: (tree) ->
     # Create empty stack with first context
     @stack = new BindingsStack()
@@ -45,7 +46,7 @@ class Parser
     if node.type == 'ConstantDeclaration'
       return @parseConstantDeclaration(node)
 
-    throw "Unknow node type #{node.type}"
+    # throw "Unknow node type #{node.type}"
 
   parseArray: (array) ->
     @parseNode(node) for node in array
@@ -60,14 +61,16 @@ class Parser
 
 
 
-
 tree = parser.parse(input)
 console.log('tree', prettyjson.render(tree));
 
-parser = new Parser()
-parser.parse(tree)
+checker = new Checker()
+checker.parse(tree)
 
+result = escodegen.generate(tree, indent: '')
 
+console.log 'result'
+console.log result
 
 
 # function bindValues(node, context) {
