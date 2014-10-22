@@ -916,7 +916,8 @@ AssignmentExpression
         type:     "AssignmentExpression",
         operator: "=",
         left:     left,
-        right:    right
+        right:    right,
+        loc: [line(), column()]
       };
     }
   / left:LeftHandSideExpression __

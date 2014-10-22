@@ -29,16 +29,40 @@ class Environment
   bind: (identifier, value) ->
     @current().bind(identifier, value)
 
+  bindConstant: (identifier, value) ->
+    @current().bindConstant(identifier, value)
+
+  findBinding: (identifier) ->
+    # TODO: loop through all contexts and check each
+    @current().findBinding(identifier)
+
 
 class Context
   constructor: ->
     @bindings = {}
 
   bind: (identifier, value) ->
+    @checkBinding(identifier)
+
+    @bindings[identifier] = {
+      value: value,
+      isVariable: true
+    }
+
+  bindConstant: (identifier, value) ->
+    @checkBinding(identifier)    
+
+    @bindings[identifier] = {
+      value: value,
+      isVariable: false
+    }
+
+  checkBinding: (identifier) ->
     if @bindings[identifier]
       Checker.fail "Already bound: #{identifier}"
 
-    @bindings[identifier] = value
+  findBinding: (identifier) ->
+    @bindings[identifier]
 
 
 class Checker
@@ -66,6 +90,17 @@ class Checker
     if node.type == 'VariableDeclarator'
       return @declareVariable(node)
 
+    if node.type == 'ConstantDeclaration'
+      node.type = 'VariableDeclaration' # TODO: We're modifying tree now, should that be done in a separate pass?
+      node.kind = 'var'
+      return @declareConstants(node.declarations)
+
+    if node.type == 'ExpressionStatement'
+      return @parseNode(node.expression)
+
+    if node.type == 'AssignmentExpression'
+      return @parseAssignment(node)
+
     throw "Unknow node type #{node.type}"
 
   parseArray: (array) ->
@@ -74,8 +109,39 @@ class Checker
 
   declareVariable: (declaration) ->
     assert declaration.id.type == 'Identifier'
-
     @environment.bind declaration.id.name, declaration.init
+
+  declareConstants: (declarations) ->
+    for declaration in declarations
+      @declareConstant(declaration)
+
+  declareConstant: (declaration) ->
+    Checker.node = declaration
+    assert declaration.id.type == 'Identifier'
+    @environment.bindConstant declaration.id.name, declaration.init
+
+  parseAssignment: (assignment) ->
+    Checker.node = assignment
+
+    assert assignment.left.type == 'Identifier' # for now only support assigning to identifiers
+
+    identifier = assignment.left.name
+
+    # It must exist
+    binding = @environment.findBinding(identifier)
+
+    if !binding
+      Checker.fail "Not bound: #{identifier}"
+
+    if !binding.isVariable
+      Checker.fail "Attempting to change constant: #{identifier}"
+
+
+    # TODO:
+    # @environment.updateBinding(identifier, assignment.right)
+
+
+    console.log 'parsing assignment', assignment
 
 
 
