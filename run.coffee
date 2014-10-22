@@ -1,7 +1,9 @@
 fs = require('fs')
 
-PEG = require('pegjs');
 prettyjson = require('prettyjson')
+colors = require('colors');
+
+PEG = require('pegjs')
 escodegen = require('escodegen')
 
 
@@ -10,52 +12,70 @@ parser = PEG.buildParser(grammar)
 
 input = fs.readFileSync('./input.rapid', 'utf8')
 
+assert = (value) ->
+  if !value
+    throw "Expected truthy value: #{value}"
 
-class BindingsStack
+class Environment
   constructor: ->
     @contexts = []
+    @push(new Context)
 
   push: (context) ->
     @contexts.push(context)
 
-  currentContext: ->
-    @contexts[-1..][0]
+  current: -> @contexts[-1..][0]
 
-class BindingsContext
+  bind: (identifier, value) ->
+    @current().bind(identifier, value)
+
+
+class Context
   constructor: ->
     @bindings = {}
 
-  @bindValue: (name, value) ->
-    if @bindings[name]
-      throw "Already bound: #{name}"
+  bind: (identifier, value) ->
+    if @bindings[identifier]
+      Checker.fail "Already bound: #{identifier}"
+
+    @bindings[identifier] = value
 
 
 class Checker
   parse: (tree) ->
     # Create empty stack with first context
-    @stack = new BindingsStack()
-    context = new BindingsContext
-    @stack.push(context)
+    @environment = new Environment
 
     @parseNode(tree)
 
+  @fail: (error) ->
+    node = Checker.node
+    console.log "#{error} on #{node.loc}".red
+
+    process.exit()
+
   parseNode: (node) ->
+    Checker.node = node
+
     if node.type == 'Program'
       return @parseArray(node.body)
 
-    if node.type == 'ConstantDeclaration'
-      return @parseConstantDeclaration(node)
+    if node.type == 'VariableDeclaration'
+      return @parseArray(node.declarations)
 
-    # throw "Unknow node type #{node.type}"
+    if node.type == 'VariableDeclarator'
+      return @declareVariable(node)
+
+    throw "Unknow node type #{node.type}"
 
   parseArray: (array) ->
     @parseNode(node) for node in array
 
-  parseConstantDeclaration: (node) ->
-    @declare(node.declarations)
 
-  declare: (declarations) ->
-    console.log 'declaring', declarations
+  declareVariable: (declaration) ->
+    assert declaration.id.type == 'Identifier'
+
+    @environment.bind declaration.id.name, declaration.init
 
 
 

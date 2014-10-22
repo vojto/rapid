@@ -1047,7 +1047,8 @@ VariableDeclaration
       return {
         type: "VariableDeclarator",
         id:   id,
-        init: extractOptional(init, 1)
+        init: extractOptional(init, 1),
+        loc: [line(), column()]
       };
     }
 
