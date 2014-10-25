@@ -8,9 +8,12 @@ escodegen = require('escodegen')
 
 
 grammar = fs.readFileSync('./grammar.pegjs', 'utf8')
-parser = PEG.buildParser(grammar)
+grammarParser = PEG.buildParser(grammar)
 
 input = fs.readFileSync('./input.rapid', 'utf8')
+
+TreeParser = require('./tree_parser')
+TypeDeterminer = require('./type_determiner')
 
 assert = (value) ->
   if !value
@@ -147,29 +150,15 @@ class Checker
 
 
 
-tree = parser.parse(input)
-console.log('tree', prettyjson.render(tree));
-
-checker = new Checker()
-checker.parse(tree)
-
-result = escodegen.generate(tree, indent: '')
-
-console.log 'result'
-console.log result
+class Compiler
+  compile: ->
+    ast = grammarParser.parse(input)
 
 
-# function bindValues(node, context) {
-#   if (node.type == 'Program') {
-#     node.body.forEach(function(statement) {
-#       bindValues(statement, context);
-#     })
-#   } else if (node.type == 'ValueBinding') {
-#     context.bindValue(node.identifier.name, node.expression.value);
-#   }
-# }
+    # Pass 1: Figure types from tree in a bottom-up parse
+    typeDeterminer = new TypeDeterminer
+    typeDeterminer.determineTypes(ast)
 
-# bindValues(result, context);
+    result = escodegen.generate(ast, indent: '')
 
 
-# console.log('context', context);

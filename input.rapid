@@ -1,2 +1,2 @@
-var foo: String
-foo = 123
+var foo = 1+2
+foo = "bar"
