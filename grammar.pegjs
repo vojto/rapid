@@ -1044,11 +1044,26 @@ VariableDeclarationListNoIn
     }
 
 VariableDeclaration
-  = id:Identifier init:(__ Initialiser)? {
+  = VariableDeclarationExplicitType
+  / VariableDeclarationImplicitType
+
+VariableDeclarationExplicitType
+  = id:Identifier __ ":" __ type:Identifier init:(__ Initialiser)? {
+    return {
+      type: "VariableDeclarator",
+      id: id,
+      dataType: type,
+      init: extractOptional(init, 1),
+      loc: [line(), column()]
+    };
+  }
+
+VariableDeclarationImplicitType
+  = id:Identifier __ init:Initialiser {
       return {
         type: "VariableDeclarator",
         id:   id,
-        init: extractOptional(init, 1),
+        init: init,
         loc: [line(), column()]
       };
     }
