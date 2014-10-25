@@ -151,14 +151,17 @@ class Checker
 
 
 class Compiler
-  compile: ->
+  compile: (input) ->
     ast = grammarParser.parse(input)
 
 
     # Pass 1: Figure types from tree in a bottom-up parse
-    typeDeterminer = new TypeDeterminer
+    typeDeterminer = new TypeDeterminer(compiler: @)
     typeDeterminer.determineTypes(ast)
 
     result = escodegen.generate(ast, indent: '')
 
 
+
+compiler = new Compiler
+compiler.compile(input)
