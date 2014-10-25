@@ -108,7 +108,6 @@ class Checker
 
 
   declareVariable: (declaration) ->
-    console.log 'declaring variable', declaration
     assert declaration.id.type == 'Identifier'
     @environment.bind declaration.id.name, declaration.init
 
