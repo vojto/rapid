@@ -165,3 +165,4 @@ class Compiler
 
 compiler = new Compiler
 compiler.compile(input)
+
